@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CritCast Client Sample</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .panel {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .panel h2 {
+            margin-top: 0;
+            color: #60a5fa;
+            border-bottom: 2px solid #444;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #d1d5db;
+            font-weight: 500;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: #374151;
+            color: #ffffff;
+            font-size: 14px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+        }
+        
+        button {
+            background-color: #60a5fa;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover:not(:disabled) {
+            background-color: #3b82f6;
+        }
+        
+        button:disabled {
+            background-color: #6b7280;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .status.connected {
+            background-color: #065f46;
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+        
+        .status.disconnected {
+            background-color: #7f1d1d;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+        
+        .status.connecting {
+            background-color: #92400e;
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+        
+        .roll-feed {
+            height: 400px;
+            overflow-y: auto;
+            background-color: #111827;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+        
+        .roll-item {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .roll-total {
+            font-size: 24px;
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 5px;
+        }
+        
+        .roll-notation {
+            font-family: 'Courier New', monospace;
+            color: #d1d5db;
+            margin-bottom: 5px;
+        }
+        
+        .roll-context {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        .context-tag {
+            background-color: #374151;
+            color: #9ca3af;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            border: 1px solid #4b5563;
+        }
+        
+        .context-tag.character {
+            background-color: #065f46;
+            color: #10b981;
+            border-color: #10b981;
+        }
+        
+        .context-tag.rollType {
+            background-color: #1e3a8a;
+            color: #60a5fa;
+            border-color: #60a5fa;
+        }
+        
+        .dice-details {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 3px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #60a5fa;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #9ca3af;
+            margin: 0;
+        }
+        
+        .error {
+            background-color: #7f1d1d;
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border: 1px solid #ef4444;
+        }
+        
+        .success {
+            background-color: #065f46;
+            color: #6ee7b7;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border: 1px solid #10b981;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CritCast Client Sample</h1>
+        <p>Connect to a CritCast table, watch live rolls, and send your own rolls</p>
+    </div>
+
+    <div class="container">
+        <!-- Webhook Parameters Panel -->
+        <div class="panel">
+            <h2>Webhook Parameters</h2>
+            <div class="info-text">These settings connect you to a CritCast table and allow you to receive live roll events via webhook.
+                <br />
+                <b>Note:</b> Your table must be configured to be public
+                <br /> 
+                <b>Stake:</b> Without these, you cannot watch or receive rolls for your table.</div>
+            <div class="form-group">
+                <label for="tableId">Table ID:</label>
+                <input type="text" id="tableId" placeholder="Table ID to connect to" >
+                <div class="info-text">Find this in your tables list or from the table URL</div>
+            </div>
+            <button id="connectBtn" onclick="toggleConnection()">Connect to Table</button>
+            <div id="connectionStatus" class="status disconnected">
+                Disconnected
+            </div>
+        </div>
+
+        <!-- Create Roll API Parameters Panel -->
+        <div class="panel">
+            <h2>Create Roll API Parameters</h2>
+            <div class="info-text">These settings are used to send new rolls to CritCast using the REST API. <b>Stake:</b> Without these, you cannot create or send rolls to the table.</div>
+            <div class="form-group">
+                <label for="serverUrl">CritCast Server URL(local proxy server):</label>
+                <input type="text" id="serverUrl" value="http://localhost:8090" placeholder="http://localhost:8090 (proxy) or https://api.critcast.com (direct)">
+            </div>
+            <div class="form-group">
+                <label for="apiKey">API Key:</label>
+                <input type="text" id="apiKey" placeholder="Your API key">
+                <div class="info-text">Get this from your CritCast account's API Keys page</div>
+            </div>
+            <h2 style="margin-top: 30px;">Create Roll</h2>
+            <div class="form-group">
+                <label for="notation">Dice Notation:</label>
+                <input type="text" id="notation" value="1d20+5" placeholder="e.g., 1d20+5, 2d6, 1d4+1d6+2">
+            </div>
+            <div class="form-group">
+                <label for="character">Character Name:</label>
+                <input type="text" id="character" value="Roland" placeholder="Character name">
+            </div>
+            <div class="form-group">
+                <label for="rollType">Roll Type:</label>
+                <select id="rollType">
+                    <option value="attack">Attack</option>
+                    <option value="damage">Damage</option>
+                    <option value="skill">Skill Check</option>
+                    <option value="save">Saving Throw</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="weapon">Weapon/Spell (optional):</label>
+                <input type="text" id="weapon" placeholder="e.g., Longsword, Fireball">
+            </div>
+            <button id="rollBtn" onclick="sendRoll()" disabled>Send Roll</button>
+            <div id="rollStatus"></div>
+        </div>
+    </div>
+
+    <!-- Roll Feed -->
+    <div class="panel" style="margin-top: 20px;">
+        <h2>Live Roll Feed</h2>
+        
+        <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+            <!-- Last Message Display -->
+            <div style="flex: 1;">
+                <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #d1d5db;">Last Message Received</h3>
+                <textarea id="lastMessage" readonly style="height: 120px; font-family: monospace; font-size: 12px; resize: vertical;" placeholder="No messages received yet..."></textarea>
+            </div>
+            
+            <!-- Roll Feed -->
+            <div style="flex: 2;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="margin: 0; font-size: 16px; color: #d1d5db;">Recent Rolls</h3>
+                    <button onclick="clearRollFeed()" style="padding: 5px 10px; font-size: 12px;">Clear Feed</button>
+                </div>
+                <div id="rollFeed" class="roll-feed" style="height: 300px; overflow-y: auto; border: 1px solid #555; border-radius: 4px; padding: 10px; background-color: #1f2937;margin-left:6px">
+                    <div style="text-align: center; color: #6b7280; margin-top: 50px;">
+                        Connect to a table to see live rolls...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="client.js"></script>
+    
+    <!-- Debug script to verify functions are loaded -->
+    <script>
+        window.addEventListener('load', function() {
+            console.log('Page loaded, checking functions...');
+            if (typeof toggleConnection === 'function') {
+                console.log('✅ toggleConnection function is available');
+            } else {
+                console.error('❌ toggleConnection function is NOT available');
+                console.log('Available functions:', Object.keys(window).filter(key => typeof window[key] === 'function' && key.includes('toggle')));
+            }
+        });
+    </script>
+</body>
+</html>
