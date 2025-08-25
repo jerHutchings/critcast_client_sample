@@ -1,0 +1,5 @@
+# CritCast Client Sample Proxy Server Dependencies
+
+aiohttp==3.9.1
+python-socketio==5.10.0
+python-dotenv==1.0.0
